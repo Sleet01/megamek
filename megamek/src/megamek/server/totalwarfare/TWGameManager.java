@@ -18422,7 +18422,6 @@ public class TWGameManager extends AbstractGameManager {
         boolean isPlatoon = !isBattleArmor && (te instanceof Infantry);
         boolean wasDamageIS = false;
         boolean tookInternalDamage = damageIS;
-        Hex te_hex = null;
 
         // TACs from the hit location table
         int crits;
@@ -18439,8 +18438,7 @@ public class TWGameManager extends AbstractGameManager {
         HitData nextHit = null;
 
         // Some "hits" on a ProtoMek are actually misses.
-        if ((te instanceof ProtoMek) && (hit.getLocation() == ProtoMek.LOC_NMISS)) {
-            ProtoMek proto = (ProtoMek) te;
+        if ((te instanceof ProtoMek proto) && (hit.getLocation() == ProtoMek.LOC_NMISS)) {
             r = new Report(6035);
             r.subject = te.getId();
             r.indent(2);
@@ -18667,6 +18665,7 @@ public class TWGameManager extends AbstractGameManager {
                         }
                     }
                 }
+
                 if (te.getInternal(hit) <= 0) {
                     // internal structure is gone, what are the transfer
                     // potentials?
@@ -19025,15 +19024,15 @@ public class TWGameManager extends AbstractGameManager {
                                      boolean ammoExplosion, DamageType damageType, boolean damageIS,
                                      boolean areaSatArty, boolean throughFront, boolean underWater,
                                      boolean nukeS2S, Map<String, Object> modsMap) {
-        // This is good for shields if a shield absorps the hit it shouldn't
+        // This is good for shields if a shield absorbs the hit it shouldn't
         // effect the pilot.
         // TC SRM's that hit the head do external and internal damage but its
-        // one hit and shouldn't cause
-        // 2 hits to the pilot.
+        // one hit and shouldn't cause 2 hits to the pilot.
         modsMap.put("isHeadHit", ((te.getCockpitType() != Mek.COCKPIT_TORSO_MOUNTED)
                 && (hit.getLocation() == Mek.LOC_HEAD)
                 && ((hit.getEffect() & HitData.EFFECT_NO_CRITICALS) != HitData.EFFECT_NO_CRITICALS)));
         int te_n = te.getId();
+        Entity ae = game.getEntity(hit.getAttackerId());
         Report r;
         boolean autoEject = false;
 
@@ -19151,14 +19150,14 @@ public class TWGameManager extends AbstractGameManager {
             }
 
             // Armored Cowl may absorb some damage from hit
-            if (targetMek.hasCowl() && (hit.getLocation() == Mek.LOC_HEAD)
-                && ((targetMek.getPosition() == null) || (ae == null)
-                || !targetMek.getPosition().isOnHexRow(targetMek.getSecondaryFacing(), ae.getPosition()))) {
-                int excessDamage = targetMek.damageCowl(damage);
+            if (te.hasCowl() && (hit.getLocation() == Mek.LOC_HEAD)
+                && ((te.getPosition() == null) || (ae == null)
+                || !te.getPosition().isOnHexRow(te.getSecondaryFacing(), ae.getPosition()))) {
+                int excessDamage = te.damageCowl(damage);
                 int blockedByCowl = damage - excessDamage;
                 r = new Report(3520).subject(te_n).indent(3).add(blockedByCowl);
                 vDesc.addElement(r);
-                targetMek.damageThisPhase += blockedByCowl;
+                te.damageThisPhase += blockedByCowl;
                 damage = excessDamage;
             }
 
@@ -19728,7 +19727,9 @@ public class TWGameManager extends AbstractGameManager {
                                    boolean ammoExplosion, DamageType damageType, boolean damageIS,
                                    boolean areaSatArty, boolean throughFront, boolean underWater,
                                    boolean nukeS2S, Map<String, Object> modsMap){
+        boolean isPlatoon = true;
         int te_n = te.getId();
+        Hex te_hex = game.getBoard().getHex(te.getPosition());
         Report r;
 
         // Infantry with TSM implants get 2d6 burst damage from ATSM munitions
@@ -19858,13 +19859,13 @@ public class TWGameManager extends AbstractGameManager {
         int critBonus = 0;
         if (game.getOptions().booleanOption(OptionsConstants.ADVCOMBAT_TACOPS_CRIT_ROLL)
                 && (damageOriginal > 0)
-                && ((te instanceof Mek) || (te instanceof Protomech))) {
+                && ((te instanceof Mek) || (te instanceof ProtoMek))) {
             critBonus = Math.min((damageOriginal - 1) / 5, 4);
         }
 
         // Find out if Human TRO plays a part it crit bonus
         if ((ae != null) && !areaSatArty) {
-            if ((te instanceof Mek) && ae.hasAbility(OptionsConstants.MISC_HUMAN_TRO, Crew.HUMANTRO_MECH)) {
+            if ((te instanceof Mek) && ae.hasAbility(OptionsConstants.MISC_HUMAN_TRO, Crew.HUMANTRO_MEK)) {
                 critBonus += 1;
             } else if ((te instanceof Aero) && ae.hasAbility(OptionsConstants.MISC_HUMAN_TRO, Crew.HUMANTRO_AERO)) {
                 critBonus += 1;
