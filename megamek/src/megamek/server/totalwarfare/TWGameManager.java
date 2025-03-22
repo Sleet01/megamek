@@ -19938,6 +19938,7 @@ public class TWGameManager extends AbstractGameManager {
                                             boolean areaSatArty, boolean throughFront, boolean underWater,
                                             boolean nukeS2S, Map<String, Object> modsMap) {
         final boolean eiStatus = te.hasActiveEiCockpit();
+        final boolean vacuum = game.getPlanetaryConditions().getAtmosphere().isLighterThan(Atmosphere.THIN);
         int te_n = te.getId();
         boolean damageIS = (boolean) modsMap.get("damageIS");
         Report r;
@@ -19967,8 +19968,7 @@ public class TWGameManager extends AbstractGameManager {
         }
 
         // Is the squad in vacuum?
-        if(!te.isDestroyed() && !te.isDoomed()
-                && game.getPlanetaryConditions().getAtmosphere().isLighterThan(Atmosphere.THIN)) {
+        if(!te.isDestroyed() && !te.isDoomed() && vacuum) {
             // PBI. Double damage.
             damage *= 2;
             r = new Report(6041);
@@ -20847,6 +20847,7 @@ public class TWGameManager extends AbstractGameManager {
 
                 vDesc.addElement(r);
             }
+
             if (armorThreshold >= damage) {
 
                 // armor absorbs all damage
@@ -20900,6 +20901,7 @@ public class TWGameManager extends AbstractGameManager {
                 }
 
             } else {
+
                 // damage goes on to internal
                 int absorbed = Math.max(te.getArmor(hit), 0);
                 if (hardenedArmor
