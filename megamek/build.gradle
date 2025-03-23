@@ -85,7 +85,9 @@ ext {
         'java.base/java.util=ALL-UNNAMED',
         '--add-opens',
         'java.base/java.util.concurrent=ALL-UNNAMED',
-        '-Dsun.awt.disablegrab=true'
+        '-Dsun.awt.disablegrab=true',
+        '-Dsun.java2d.d3d=false',
+        '-Dsun.java2d.opengl=true'
     ]
     data = 'data'
     unitFiles = "${data}/mekfiles"
