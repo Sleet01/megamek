@@ -32,12 +32,18 @@
  */
 package megamek.utilities.xml;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.StringJoiner;
 import java.util.UUID;
@@ -420,6 +426,22 @@ public class MMXMLUtility {
     public static String escape(final String string) {
         return StringEscapeUtils.escapeXml10(string);
     }
+
+    public static void writeSerialCDATA(final PrintWriter pw, final int indent, final String name,
+          final Serializable object) {
+
+        if (object != null) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try (ObjectOutputStream out = new ObjectOutputStream(baos)) {
+                out.writeObject(object);
+                out.flush();
+                String base64Encoded = Base64.getEncoder().encodeToString(baos.toByteArray());
+                pw.println(indentStr(indent) + '<' + name + "><![CDATA[" + base64Encoded  + "]]></" + name + '>');
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
     // endregion XML Writing
 
     // region XML Parsing
@@ -549,6 +571,35 @@ public class MMXMLUtility {
      */
     public static String unEscape(final String string) {
         return StringEscapeUtils.unescapeXml(string);
+    }
+
+    /**
+     * Turn a base64 character block into (hopefully) an object, usually a Lambda.
+     * Caller is responsible for confirming that the value is from a CDATA block.
+     * @param value base64-encoded byte stream
+     * @return object Serializable, generally some small Lambda.
+     */
+    public static @Nullable Object parseSerialCDATA(String value) {
+        if (value.isEmpty()) {
+            return null;
+        }
+
+        Object result = null;
+
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(Base64.getDecoder().decode(value));
+            try (ObjectInputStream in = new ObjectInputStream(bais)) {
+                result = in.readObject();
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+
+        return result;
     }
     // endregion XML Parsing
 }
