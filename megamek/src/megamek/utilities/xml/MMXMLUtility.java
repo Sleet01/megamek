@@ -427,6 +427,14 @@ public class MMXMLUtility {
         return StringEscapeUtils.escapeXml10(string);
     }
 
+    /**
+     * This method allows storing arbitrary objects as base64-encoded byte array streams within an XML field.
+     *
+     * @param pw        PrintWriter for output (see MHQ unit tests for mockup approach)
+     * @param indent    indentation char count
+     * @param name      String for open/close tags (CDATA protocol specifies the internal tag format)
+     * @param object    Object that implements Serializable; currently only MHQ-specific Runnable and Supplier classes
+     */
     public static void writeSerialCDATA(final PrintWriter pw, final int indent, final String name,
           final Serializable object) {
 
