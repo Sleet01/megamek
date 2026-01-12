@@ -154,7 +154,7 @@ import megamek.utilities.xml.MMXMLUtility;
 @JsonDeserialize(using = EntityDeserializer.class)
 public abstract class Entity extends TurnOrdered
       implements Transporter, Targetable, RoundUpdated, PhaseUpdated, ITechnology, ForceAssignable, CombatRole,
-                 Deployable, ICarryable {
+                 Deployable, ICarryable, IContact {
 
     private static final MMLogger LOGGER = MMLogger.create(Entity.class);
 
