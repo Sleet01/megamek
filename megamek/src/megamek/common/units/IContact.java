@@ -41,6 +41,7 @@ import java.util.List;
 
 public interface IContact extends BTObject {
 
+    Crew getCrew();
     List<AmmoMounted> getAmmo();
     List<WeaponMounted> getWeaponList();
     boolean hasTAG();
@@ -55,4 +56,5 @@ public interface IContact extends BTObject {
     int getDeployRound();
     Player getOwner();
     int getOwnerId();
+    String getShortName();
 }
