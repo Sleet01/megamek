@@ -47,6 +47,10 @@ public class ObscuredEntity implements IContact {
     private int logisticsLevel;
     private int personnelLevel;
 
+    public ObscuredEntity(Entity entity) {
+        this(entity, 12, 12, 12, 12);
+    }
+
     public ObscuredEntity(
           Entity entity, int forcesLevel, int positionLevel, int logisticsLevel, int personnelLevel
     ) {

@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -68,12 +69,11 @@ import megamek.common.game.Game;
 import megamek.common.loaders.MapSettings;
 import megamek.common.options.GameOptions;
 import megamek.common.options.OptionsConstants;
-import megamek.common.units.BTObject;
 import megamek.common.units.Entity;
 import megamek.common.units.IBomber;
 import megamek.common.units.IContact;
 import megamek.common.units.Mek;
-import megamek.common.units.Targetable;
+import megamek.common.units.ObscuredEntity;
 import megamek.common.units.UnitRole;
 import megamek.logging.MMLogger;
 
@@ -893,6 +893,47 @@ public class TeamLoadOutGenerator {
     }
 
     // endregion generateValidMunitionsForFactionAndEra
+
+    // region MekHQ helpers
+    public static void configureForceMunitions(Game cGame, ArrayList<? extends IContact> entityList,
+          String opForFactionCode, ArrayList<? extends IContact> opForEntities, ArrayList<String> allyFactionCodes,
+          int qualityRating, boolean isPirate, boolean groundMap, boolean spaceMap) {
+
+        // Use the _actual_ entities for some of these steps, as we need direct access and have full knowledge
+        // of our _own_ units.
+        ArrayList<Entity> trueEntityList = new ArrayList<>();
+        for (IContact contact : entityList) {
+            if (contact instanceof Entity entity) {
+                trueEntityList.add(entity);
+            } else if (contact instanceof ObscuredEntity obscured) {
+                trueEntityList.add(obscured.getEntity());
+            }
+        }
+
+        TeamLoadOutGenerator tlg = new TeamLoadOutGenerator(cGame);
+
+        // bin fill ratio will be adjusted by the loadout generator based on piracy and
+        // quality
+        ReconfigurationParameters rp = TeamLoadOutGenerator.generateParameters(cGame,
+              cGame.getOptions(),
+              trueEntityList,
+              opForFactionCode,
+              opForEntities,
+              allyFactionCodes,
+              qualityRating,
+              ((isPirate) ? TeamLoadOutGenerator.UNSET_FILL_RATIO : 1.0f));
+        rp.isPirate = isPirate;
+        rp.groundMap = groundMap;
+        rp.spaceEnvironment = spaceMap;
+
+        MunitionTree mt = TeamLoadOutGenerator.generateMunitionTree(rp, trueEntityList, "");
+        // We now have the ability to pre-create a munition availability map for use with special scenarios,
+        // representing limited-availability ammo in the hands of a specific force.
+        tlg.reconfigureEntities(trueEntityList, opForFactionCode, mt, rp, null);
+
+    }
+
+    // endregion MekHQ helpers
 
     // region generateParameters
     public ReconfigurationParameters generateParameters(Team team) {
