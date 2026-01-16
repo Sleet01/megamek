@@ -950,7 +950,8 @@ public class TeamLoadOutGenerator {
 
     public static ReconfigurationParameters generateParameters(Game g, GameOptions gOpts,
           ArrayList<? extends IContact> ownEntities,
-          String friendlyFaction, ArrayList<IContact> enemyEntities, ArrayList<String> enemyFactions, int rating,
+          String friendlyFaction, ArrayList<? extends IContact> enemyEntities, ArrayList<String> enemyFactions,
+          int rating,
           float fillRatio) {
 
         boolean blind = gOpts.booleanOption(OptionsConstants.BASE_BLIND_DROP) ||
