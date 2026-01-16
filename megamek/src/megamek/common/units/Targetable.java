@@ -135,13 +135,6 @@ public interface Targetable extends InGameObject, Serializable {
     boolean isOffBoard();
 
     /**
-     * @return if this is an <code>Entity</code> capable of carrying and using bombs
-     */
-    default boolean isBomber() {
-        return false;
-    }
-
-    /**
      * @return Is the entity airborne in the fashion of an aerospace unit? Does not include VTOL movement (see
      *       {@link Targetable#isAirborneVTOLorWIGE()}
      */
@@ -167,15 +160,6 @@ public interface Targetable extends InGameObject, Serializable {
 
     default boolean isHexBeingBombed() {
         return getTargetType() == TYPE_HEX_AERO_BOMB || getTargetType() == TYPE_HEX_BOMB;
-    }
-
-    /**
-     * Used to identify a target that tracks heat buildup (Meks, ASFs, and small craft).
-     *
-     * @return Whether the target tracks heat buildup.
-     */
-    default boolean tracksHeat() {
-        return false;
     }
 
     default boolean isBracing() {

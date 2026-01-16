@@ -376,6 +376,13 @@ public interface BTObject {
     }
 
     /**
+     * @return if this is an <code>Entity</code> capable of carrying and using bombs
+     */
+    default boolean isBomber() {
+        return false;
+    }
+
+    /**
      * Returns true when this is a group of units or elements such as a TW Squadron, BF Unit or SBF Formation even if it
      * happens to contain only a single element at the time.
      *
@@ -396,6 +403,14 @@ public interface BTObject {
         return !isUnitGroup();
     }
 
+    /**
+     * Used to identify a target that tracks heat buildup (Meks, ASFs, and small craft).
+     *
+     * @return Whether the target tracks heat buildup.
+     */
+    default boolean tracksHeat() {
+        return false;
+    }
     /**
      * Returns the general name or type name of this unit/object. For standard individual units, this is the chassis.
      * For other types of units or objects this can be the full designation or a general part of the designation. Much

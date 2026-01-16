@@ -71,6 +71,7 @@ import megamek.common.options.OptionsConstants;
 import megamek.common.units.BTObject;
 import megamek.common.units.Entity;
 import megamek.common.units.IBomber;
+import megamek.common.units.IContact;
 import megamek.common.units.Mek;
 import megamek.common.units.Targetable;
 import megamek.common.units.UnitRole;
@@ -616,28 +617,28 @@ public class TeamLoadOutGenerator {
     }
 
     // region Check for various unit types, armor types, etc.
-    private static long checkForBombers(ArrayList<Entity> el) {
-        return el.stream().filter(Targetable::isBomber).count();
+    private static long checkForBombers(ArrayList<? extends IContact> el) {
+        return el.stream().filter(IContact::isBomber).count();
     }
 
-    private static long checkForFliers(ArrayList<Entity> el) {
+    private static long checkForFliers(ArrayList<? extends IContact> el) {
         return el.stream().filter(e -> e.isAero() || e.hasETypeFlag(Entity.ETYPE_VTOL)).count();
     }
 
-    private static long checkForInfantry(ArrayList<Entity> el) {
+    private static long checkForInfantry(ArrayList<? extends IContact> el) {
         return el.stream().filter(e -> e.isInfantry() && !e.isBattleArmor()).count();
     }
 
-    private static long checkForBattleArmor(ArrayList<Entity> el) {
-        return el.stream().filter(Entity::isBattleArmor).count();
+    private static long checkForBattleArmor(ArrayList<? extends IContact> el) {
+        return el.stream().filter(IContact::isBattleArmor).count();
     }
 
-    private static long checkForVehicles(ArrayList<Entity> el) {
-        return el.stream().filter(BTObject::isVehicle).count();
+    private static long checkForVehicles(ArrayList<? extends IContact> el) {
+        return el.stream().filter(IContact::isVehicle).count();
     }
 
-    private static long checkForMeks(ArrayList<Entity> el) {
-        return el.stream().filter(BTObject::isMek).count();
+    private static long checkForMeks(ArrayList<? extends IContact> el) {
+        return el.stream().filter(IContact::isMek).count();
     }
 
     /**
@@ -647,7 +648,7 @@ public class TeamLoadOutGenerator {
      *
      * @return Number of Energy Boats
      */
-    private static long checkForEnergyBoats(ArrayList<Entity> el) {
+    private static long checkForEnergyBoats(ArrayList<? extends IContact> el) {
         return el.stream().filter(e -> e.tracksHeat() && e.getAmmo().isEmpty()).count();
     }
 
@@ -659,7 +660,7 @@ public class TeamLoadOutGenerator {
      *
      * @return Number of Missile Boats
      */
-    private static long checkForMissileBoats(ArrayList<Entity> el) {
+    private static long checkForMissileBoats(ArrayList<? extends IContact> el) {
         return el.stream()
               .filter(e -> e.getRole().isAnyOf(UnitRole.MISSILE_BOAT) ||
                     e.getWeaponList()
@@ -674,17 +675,17 @@ public class TeamLoadOutGenerator {
               .count();
     }
 
-    private static long checkForTAG(ArrayList<Entity> el) {
-        return el.stream().filter(Entity::hasTAG).count();
+    private static long checkForTAG(ArrayList<? extends IContact> el) {
+        return el.stream().filter(IContact::hasTAG).count();
     }
 
-    private static long checkForNARC(ArrayList<Entity> el) {
+    private static long checkForNARC(ArrayList<? extends IContact> el) {
         return el.stream()
               .filter(e -> e.getAmmo().stream().anyMatch(a -> a.getType().getAmmoType() == AmmoType.AmmoTypeEnum.NARC))
               .count();
     }
 
-    private static long checkForAdvancedArmor(ArrayList<Entity> el) {
+    private static long checkForAdvancedArmor(ArrayList<? extends IContact> el) {
         // Most units have a location 0
         return el.stream()
               .filter(e -> e.getArmorType(0) == ArmorType.T_ARMOR_HARDENED ||
@@ -695,30 +696,30 @@ public class TeamLoadOutGenerator {
               .count();
     }
 
-    private static long checkForReflectiveArmor(ArrayList<Entity> el) {
+    private static long checkForReflectiveArmor(ArrayList<? extends IContact> el) {
         return el.stream()
               .filter(e -> e.getArmorType(0) == ArmorType.T_ARMOR_REFLECTIVE ||
                     e.getArmorType(0) == ArmorType.T_ARMOR_BA_REFLECTIVE)
               .count();
     }
 
-    private static long checkForFireproofArmor(ArrayList<Entity> el) {
+    private static long checkForFireproofArmor(ArrayList<? extends IContact> el) {
         return el.stream().filter(e -> e.getArmorType(0) == ArmorType.T_ARMOR_BA_FIRE_RESIST).count();
     }
 
-    private static long checkForFastMovers(ArrayList<Entity> el) {
+    private static long checkForFastMovers(ArrayList<? extends IContact> el) {
         return el.stream().filter(e -> e.getOriginalWalkMP() > 5).count();
     }
 
-    private static long checkForOffBoard(ArrayList<Entity> el) {
+    private static long checkForOffBoard(ArrayList<? extends IContact> el) {
         return el.stream().filter(e -> e.shouldOffBoardDeploy(e.getDeployRound())).count();
     }
 
-    private static long checkForECM(ArrayList<Entity> el) {
-        return el.stream().filter(Entity::hasECM).count();
+    private static long checkForECM(ArrayList<? extends IContact> el) {
+        return el.stream().filter(IContact::hasECM).count();
     }
 
-    private static long checkForTSM(ArrayList<Entity> el) {
+    private static long checkForTSM(ArrayList<? extends IContact> el) {
         return el.stream().filter(e -> e.isMek() && ((Mek) e).hasTSM(false)).count();
     }
     // endregion Check for various unit types, armor types, etc.
@@ -896,13 +897,14 @@ public class TeamLoadOutGenerator {
     // region generateParameters
     public ReconfigurationParameters generateParameters(Team team) {
         Iterator<Entity> entityIterator = game.getTeamEntities(team);
-        ArrayList<Entity> ownTeamEntities = new ArrayList<>();
+        ArrayList<IContact> ownTeamEntities = new ArrayList<>();
         entityIterator.forEachRemaining(ownTeamEntities::add);
 
         return generateParameters(game, gameOptions, ownTeamEntities, team.getFaction(), team);
     }
 
-    public ReconfigurationParameters generateParameters(ArrayList<Entity> ownEntities, String ownFaction, Team t) {
+    public ReconfigurationParameters generateParameters(ArrayList<? extends IContact> ownEntities, String ownFaction,
+          Team t) {
         return generateParameters(game, gameOptions, ownEntities, ownFaction, t);
     }
 
@@ -917,13 +919,14 @@ public class TeamLoadOutGenerator {
      *
      * @return ReconfigurationParameters with information about enemy and friendly forces
      */
-    public static ReconfigurationParameters generateParameters(Game g, GameOptions gOpts, ArrayList<Entity> ownEntities,
+    public static ReconfigurationParameters generateParameters(Game g, GameOptions gOpts,
+          ArrayList<? extends IContact> ownEntities,
           String friendlyFaction, Team team) {
         if (ownEntities.isEmpty()) {
             // Nothing to generate
             return new ReconfigurationParameters();
         }
-        ArrayList<Entity> etEntities = new ArrayList<>();
+        ArrayList<IContact> etEntities = new ArrayList<>();
         ArrayList<String> enemyFactions = new ArrayList<>();
 
         for (Team et : g.getTeams()) {
@@ -945,8 +948,9 @@ public class TeamLoadOutGenerator {
               1.0f);
     }
 
-    public static ReconfigurationParameters generateParameters(Game g, GameOptions gOpts, ArrayList<Entity> ownEntities,
-          String friendlyFaction, ArrayList<Entity> enemyEntities, ArrayList<String> enemyFactions, int rating,
+    public static ReconfigurationParameters generateParameters(Game g, GameOptions gOpts,
+          ArrayList<? extends IContact> ownEntities,
+          String friendlyFaction, ArrayList<IContact> enemyEntities, ArrayList<String> enemyFactions, int rating,
           float fillRatio) {
 
         boolean blind = gOpts.booleanOption(OptionsConstants.BASE_BLIND_DROP) ||
@@ -971,8 +975,9 @@ public class TeamLoadOutGenerator {
               fillRatio);
     }
 
-    public static ReconfigurationParameters generateParameters(ArrayList<Entity> ownTeamEntities,
-          ArrayList<Entity> etEntities, String friendlyFaction, ArrayList<String> enemyFactions, boolean blind,
+    public static ReconfigurationParameters generateParameters(ArrayList<? extends IContact> ownTeamEntities,
+          ArrayList<? extends IContact> etEntities, String friendlyFaction, ArrayList<String> enemyFactions,
+          boolean blind,
           boolean darkEnvironment, boolean groundMap, boolean spaceEnvironment, int rating, float fillRatio) {
         ReconfigurationParameters reconfigurationParameters = new ReconfigurationParameters();
 

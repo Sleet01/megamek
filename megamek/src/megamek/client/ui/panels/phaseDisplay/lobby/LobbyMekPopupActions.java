@@ -61,6 +61,7 @@ import megamek.common.net.packets.InvalidPacketDataException;
 import megamek.common.options.OptionsConstants;
 import megamek.common.units.Entity;
 import megamek.common.units.IBomber;
+import megamek.common.units.IContact;
 import megamek.common.util.StringUtil;
 import megamek.logging.MMLogger;
 
