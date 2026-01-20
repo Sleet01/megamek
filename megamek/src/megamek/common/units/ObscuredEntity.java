@@ -34,12 +34,23 @@
 package megamek.common.units;
 
 import megamek.common.Player;
+import megamek.common.enums.Gender;
 import megamek.common.equipment.AmmoMounted;
 import megamek.common.equipment.WeaponMounted;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
+/**
+ * Class for implementing concealed information (TO:AR pp. 187-188) and espionage,
+ * without further modifying the Entity class.
+ */
 public class ObscuredEntity implements IContact {
+
+    public final static int HIGHEST_LEVEL = 12;
+    public final static int LOWEST_LEVEL = -12;
 
     private Entity entity;
     private int forcesLevel;
@@ -66,11 +77,11 @@ public class ObscuredEntity implements IContact {
     }
 
     public Crew getCrew() {
-        return entity.getCrew();
+        return hideCrew(entity.getCrew(), personnelLevel);
     }
 
     public String getShortName() {
-        return entity.getShortName();
+        return hideShortName(entity, forcesLevel);
     }
 
     public String generalName() {
@@ -133,6 +144,7 @@ public class ObscuredEntity implements IContact {
         return entity.getDeployRound();
     }
 
+    // These next two should probably not be messed with initially.
     public Player getOwner() {
         return entity.getOwner();
     }
@@ -141,4 +153,134 @@ public class ObscuredEntity implements IContact {
         return entity.getOwnerId();
     }
 
+    protected static Crew hideCrew(Crew crew, int level) {
+        if (level == HIGHEST_LEVEL) {
+            return crew;
+        }
+        Crew oCrew = new Crew(
+              hideCrewType(crew.getCrewType(), level),
+              hideName(crew.getName(), level),
+              hideSize(crew.getSize(), level),
+              hideSkill(crew.getGunneryL(), level),
+              hideSkill(crew.getGunneryM(), level),
+              hideSkill(crew.getGunneryB(), level),
+              hideSkill(crew.getPiloting(), level),
+              hideGender(crew.getGender(), level),
+              hideClanOrNot(crew.isClanPilot(), level),
+              hideExtraData(crew.getExtraData(), level)
+        );
+
+        return oCrew;
+    }
+
+    protected static CrewType hideCrewType(CrewType crewType, int level) {
+        if (level == HIGHEST_LEVEL) {
+            return crewType;
+        }
+        return CrewType.values()[Math.floorMod(crewType.getCrewSlots() + level, 10)];
+    }
+
+    protected static String hideName(String name, int level) {
+        if (level == HIGHEST_LEVEL) {
+            return name;
+        } else if (level == 0) {
+            return "???";
+        }
+
+        StringBuilder builder = new StringBuilder(name);
+
+        if (level > 0) {
+            int stride = Math.min(1, (name.length()/(1 + (HIGHEST_LEVEL-level))));
+            for (int i = stride - 1; i < name.length(); i+=stride) {
+                builder.setCharAt(i, '?');
+            }
+        } else if (level < 0) {
+            String abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'-. ";
+            Random random = new Random();
+            int stride = 3;
+            int offset = 0;
+            for (int i = 0; i < Math.abs(level); i++) {
+                for (int j = offset; j < name.length(); j+=stride) {
+                    builder.setCharAt(j, abc.charAt(random.nextInt(abc.length())));
+                }
+                offset = (offset + 1) % 3;
+            }
+        }
+
+        return builder.toString();
+    }
+
+    protected static int hideSize(int size, int level) {
+        if (level == HIGHEST_LEVEL) {
+            return size;
+        }
+        return CrewType.values()[Math.floorMod(size + level, 10)].getCrewSlots();
+    }
+
+    protected static int hideSkill(int skill, int level) {
+        int fakeSkill = switch (level) {
+            case HIGHEST_LEVEL -> skill;
+            case 11, 10 -> List.of(-1, 1).get(Math.floorMod(level + skill, 2)) + skill;
+            case 9, 8 -> List.of(-2, -1, 1, 2).get(Math.floorMod(level + skill, 4)) + skill;
+            case 7, 6 -> List.of(-3, -2, -1, 1, 2, 3).get(Math.floorMod(level + skill, 6)) + skill;
+            case 5, 4 -> List.of(-4, -3, -2, -1, 1, 2, 3, 4).get(Math.floorMod(level + skill, 8)) + skill;
+            case 3, 2 -> List.of(-5, -4, -3, -2, -1, 1, 2, 3, 4, 5).get(Math.floorMod(level + skill, 10)) + skill;
+            case 1, 0, -1 -> 4;
+            // -2 and lower
+            default -> 8 - skill;
+        };
+        return (Math.max(Math.min(8, fakeSkill), 0));
+    }
+
+    // Very simple: swap if level is below 0
+    protected static Gender hideGender(Gender gender, int level) {
+        if (level < 0) {
+            return (gender == Gender.MALE) ? Gender.FEMALE : Gender.MALE;
+        }
+        return gender;
+    }
+
+    // Very simple: swap if level is below 0
+    protected static boolean hideClanOrNot(boolean clanOrNot, int level) {
+        if (level < 0) {
+            return !clanOrNot;
+        }
+        return clanOrNot;
+    }
+
+    // Very simple, for now: strip all extra data
+    protected static Map<Integer, Map<String, String>> hideExtraData(Map<Integer, Map<String, String>> extraData,
+          int level) {
+        if (level == HIGHEST_LEVEL) {
+            return extraData;
+        } else if (level == 0) {
+            return new HashMap<>();
+        }
+        // Munge up the data somehow.  If level is below 0, no data is returned.
+        HashMap fakeData = new HashMap();
+        for (int i = 0; i < level; i++) {
+            if (extraData.get(i) != null) {
+                Map<String, String> entry = extraData.get(i);
+                for (String key : entry.keySet()) {
+                    if (key.length() <= level) {
+                        fakeData.put(i, entry);
+                    }
+                }
+            }
+        }
+        return fakeData;
+    }
+
+    protected static String hideShortName(Entity entity, int level) {
+        if (level == HIGHEST_LEVEL) {
+            return entity.getShortName();
+        } if (level == 0) {
+            return "???";
+        }
+
+        // Use getShortNameRaw to produce mungible string to work with?
+        // Or getChassis, getClanChassis, getModel methods?
+        return "Bob";
+
+    }
 }
