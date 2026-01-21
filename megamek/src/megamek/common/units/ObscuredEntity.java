@@ -37,7 +37,9 @@ import megamek.common.Player;
 import megamek.common.enums.Gender;
 import megamek.common.equipment.AmmoMounted;
 import megamek.common.equipment.WeaponMounted;
+import megamek.common.game.Game;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,33 +49,90 @@ import java.util.Random;
  * Class for implementing concealed information (TO:AR pp. 187-188) and espionage,
  * without further modifying the Entity class.
  */
-public class ObscuredEntity implements IContact {
+public class ObscuredEntity implements IContact, Serializable {
 
     public final static int HIGHEST_LEVEL = 12;
     public final static int LOWEST_LEVEL = -12;
+    public final static int UNKNOWN_ENTITY_ID = -1;
 
-    private Entity entity;
+    private transient Entity entity;
+    private int entityId;
     private int forcesLevel;
     private int positionLevel;
     private int logisticsLevel;
     private int personnelLevel;
 
+    public ObscuredEntity(Game game, int entityId) {
+        this(game.getEntity(entityId), HIGHEST_LEVEL, HIGHEST_LEVEL, LOWEST_LEVEL, LOWEST_LEVEL);
+    }
+
     public ObscuredEntity(Entity entity) {
-        this(entity, 12, 12, 12, 12);
+        this(entity, HIGHEST_LEVEL, HIGHEST_LEVEL, LOWEST_LEVEL, LOWEST_LEVEL);
     }
 
     public ObscuredEntity(
           Entity entity, int forcesLevel, int positionLevel, int logisticsLevel, int personnelLevel
     ) {
         this.entity = entity;
+        this.entityId = (entity != null) ? entity.getId() : UNKNOWN_ENTITY_ID;
         this.forcesLevel = forcesLevel;
         this.positionLevel = positionLevel;
         this.logisticsLevel = logisticsLevel;
         this.personnelLevel = personnelLevel;
     }
 
+    public int getForcesLevel() {
+        return forcesLevel;
+    }
+
+    public void setForcesLevel(int forcesLevel) {
+        this.forcesLevel = forcesLevel;
+    }
+
+    public int getPositionLevel() {
+        return positionLevel;
+    }
+
+    public void setPositionLevel(int positionLevel) {
+        this.positionLevel = positionLevel;
+    }
+
+    public int getLogisticsLevel() {
+        return logisticsLevel;
+    }
+
+    public void setLogisticsLevel(int logisticsLevel) {
+        this.logisticsLevel = logisticsLevel;
+    }
+
+    public int getPersonnelLevel() {
+        return personnelLevel;
+    }
+
+    public void setPersonnelLevel(int personnelLevel) {
+        this.personnelLevel = personnelLevel;
+    }
+
     public Entity getEntity() {
         return entity;
+    }
+
+    /**
+     * Set the entity.
+     * Side effect: sets the entityId field to the entity's ID value.
+     * @param entity
+     */
+    public void setEntity(Entity entity) {
+        this.entity = entity;
+        this.entityId = entity.getId();
+    }
+
+    public int getEntityId() {
+        return entityId;
+    }
+
+    public void setEntityId(int entityId) {
+        this.entityId = entityId;
     }
 
     public Crew getCrew() {
