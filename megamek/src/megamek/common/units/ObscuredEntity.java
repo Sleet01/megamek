@@ -36,14 +36,27 @@ package megamek.common.units;
 import megamek.common.Player;
 import megamek.common.enums.Gender;
 import megamek.common.equipment.AmmoMounted;
+import megamek.common.equipment.AmmoType;
+import megamek.common.equipment.EquipmentType;
+import megamek.common.equipment.Mounted;
 import megamek.common.equipment.WeaponMounted;
+import megamek.common.equipment.WeaponType;
 import megamek.common.game.Game;
+import megamek.common.loaders.MekSummary;
+import megamek.common.loaders.MekSummaryCache;
+import megamek.common.weapons.Weapon;
+import org.apache.commons.collections4.functors.EqualPredicate;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static megamek.common.equipment.Mounted.createMounted;
 
 /**
  * Class for implementing concealed information (TO:AR pp. 187-188) and espionage,
@@ -64,6 +77,10 @@ public class ObscuredEntity implements IContact, Serializable {
 
     public ObscuredEntity(Game game, int entityId) {
         this(game.getEntity(entityId), HIGHEST_LEVEL, HIGHEST_LEVEL, LOWEST_LEVEL, LOWEST_LEVEL);
+    }
+
+    public ObscuredEntity(Game game, int entityId, int forcesLevel, int positionLevel, int logisticsLevel, int personnelLevel) {
+        this(game.getEntity(entityId), forcesLevel, positionLevel, logisticsLevel, personnelLevel);
     }
 
     public ObscuredEntity(Entity entity) {
@@ -140,67 +157,87 @@ public class ObscuredEntity implements IContact, Serializable {
     }
 
     public String getShortName() {
-        return hideShortName(entity, forcesLevel);
+        Function<Integer, String> altShort = (level) -> {
+            int length = entity.getShortName().length();
+            MekSummary[] summaries = MekSummaryCache.getInstance(true).getAllMeks();
+            MekSummary fakeEntity = summaries[(length * level * level) % summaries.length];
+            return fakeEntity.loadEntity().getShortName();
+        };
+        return hideEntityName(entity.getShortName(), forcesLevel, altShort);
     }
 
     public String generalName() {
-        return entity.generalName();
+        Function<Integer, String> altGeneral = (level) -> {
+            int length = entity.generalName().length();
+            MekSummary[] summaries = MekSummaryCache.getInstance(true).getAllMeks();
+            return summaries[(length * level * level) % summaries.length].generalName();
+        };
+        return hideEntityName(entity.generalName(), forcesLevel, altGeneral );
     }
 
     public String specificName() {
-        return entity.specificName();
+        Function<Integer, String> altSpecific = (level) -> {
+            int length = entity.generalName().length();
+            MekSummary[] summaries = MekSummaryCache.getInstance(true).getAllMeks();
+            return summaries[(length * level * level) % summaries.length].specificName();
+        };
+        return hideEntityName(entity.specificName(), forcesLevel, altSpecific);
     }
 
     public boolean tracksHeat() {
-        return entity.tracksHeat();
+        return hideBoolean(entity.tracksHeat(), forcesLevel);
     }
 
     public List<AmmoMounted> getAmmo() {
-        return entity.getAmmo();
+        return hideAmmo(entity, logisticsLevel);
     }
 
     public List<WeaponMounted> getWeaponList() {
-        return entity.getWeaponList();
+        return hideWeapons(entity, logisticsLevel);
     }
 
     public boolean hasTAG() {
-        return entity.hasTAG();
+        return hideBoolean(entity.hasTAG(), logisticsLevel);
     }
 
     public boolean hasETypeFlag(long flag) {
-        return entity.hasETypeFlag(flag);
+        return hideBoolean(entity.hasETypeFlag(flag), forcesLevel);
     }
 
     public UnitRole getRole() {
-        return entity.getRole();
+        return hideRole(entity, forcesLevel);
     }
 
     public int getArmor(int loc) {
-        return entity.getArmor(loc);
+        int original = entity.getArmor(loc);
+        return hideNumericValue(original, logisticsLevel, 0, original * 2);
     }
 
     public int getArmorType(int loc) {
-        return entity.getArmorType(loc);
+        int original = entity.getArmorType(loc);
+        // Armor types should probably be an enum.
+        return hideNumericValue(original, logisticsLevel, -1, 51);
     }
 
     public int getOriginalWalkMP() {
-        return entity.getOriginalWalkMP();
+        int original = entity.getOriginalWalkMP();
+        return hideNumericValue(original, forcesLevel, 1, original * 3);
     }
 
     public boolean hasECM() {
-        return entity.hasECM();
+        return hideBoolean(entity.hasECM(), logisticsLevel);
     }
 
     public boolean shouldOffBoardDeploy(int round) {
-        return entity.shouldOffBoardDeploy(round);
+        return hideBoolean(entity.shouldOffBoardDeploy(round), positionLevel);
     }
 
     public boolean isOffBoard() {
-        return entity.isOffBoard();
+        return hideBoolean(entity.isOffBoard(), positionLevel);
     }
 
     public int getDeployRound() {
-        return entity.getDeployRound();
+        return hideNumericValue(entity.getDeployRound(), positionLevel, 1, 12);
     }
 
     // These next two should probably not be messed with initially.
@@ -225,7 +262,7 @@ public class ObscuredEntity implements IContact, Serializable {
               hideSkill(crew.getGunneryB(), level),
               hideSkill(crew.getPiloting(), level),
               hideGender(crew.getGender(), level),
-              hideClanOrNot(crew.isClanPilot(), level),
+              hideBoolean(crew.isClanPilot(), level),
               hideExtraData(crew.getExtraData(), level)
         );
 
@@ -249,7 +286,7 @@ public class ObscuredEntity implements IContact, Serializable {
         StringBuilder builder = new StringBuilder(name);
 
         if (level > 0) {
-            int stride = Math.min(1, (name.length()/(1 + (HIGHEST_LEVEL-level))));
+            int stride = Math.max(1, (name.length()/(1 + (HIGHEST_LEVEL-level))));
             for (int i = stride - 1; i < name.length(); i+=stride) {
                 builder.setCharAt(i, '?');
             }
@@ -276,19 +313,24 @@ public class ObscuredEntity implements IContact, Serializable {
         return CrewType.values()[Math.floorMod(size + level, 10)].getCrewSlots();
     }
 
-    protected static int hideSkill(int skill, int level) {
+    protected static int hideNumericValue(int numericValue, int level, int lowThreshold, int highThreshold) {
         int fakeSkill = switch (level) {
-            case HIGHEST_LEVEL -> skill;
-            case 11, 10 -> List.of(-1, 1).get(Math.floorMod(level + skill, 2)) + skill;
-            case 9, 8 -> List.of(-2, -1, 1, 2).get(Math.floorMod(level + skill, 4)) + skill;
-            case 7, 6 -> List.of(-3, -2, -1, 1, 2, 3).get(Math.floorMod(level + skill, 6)) + skill;
-            case 5, 4 -> List.of(-4, -3, -2, -1, 1, 2, 3, 4).get(Math.floorMod(level + skill, 8)) + skill;
-            case 3, 2 -> List.of(-5, -4, -3, -2, -1, 1, 2, 3, 4, 5).get(Math.floorMod(level + skill, 10)) + skill;
-            case 1, 0, -1 -> 4;
+            case HIGHEST_LEVEL -> numericValue;
+            case 11, 10 -> List.of(-1, 1).get(Math.floorMod(level + numericValue, 2)) + numericValue;
+            case 9, 8 -> List.of(-2, -1, 1, 2).get(Math.floorMod(level + numericValue, 4)) + numericValue;
+            case 7, 6 -> List.of(-3, -2, -1, 1, 2, 3).get(Math.floorMod(level + numericValue, 6)) + numericValue;
+            case 5, 4 -> List.of(-4, -3, -2, -1, 1, 2, 3, 4).get(Math.floorMod(level + numericValue, 8)) + numericValue;
+            case 3, 2 -> List.of(-5, -4, -3, -2, -1, 1, 2, 3, 4, 5).get(Math.floorMod(level + numericValue, 10)) + numericValue;
+            case 1, 0, -1 -> (highThreshold - lowThreshold) / 2;
             // -2 and lower
-            default -> 8 - skill;
+            default -> highThreshold - numericValue;
         };
-        return (Math.max(Math.min(8, fakeSkill), 0));
+        return (Math.max(Math.min(highThreshold, fakeSkill), lowThreshold));
+
+    }
+
+    protected static int hideSkill(int skill, int level) {
+        return hideNumericValue(skill, level, 0, 8);
     }
 
     // Very simple: swap if level is below 0
@@ -300,14 +342,127 @@ public class ObscuredEntity implements IContact, Serializable {
     }
 
     // Very simple: swap if level is below 0
-    protected static boolean hideClanOrNot(boolean clanOrNot, int level) {
+    protected static boolean hideBoolean(boolean boolValue, int level) {
         if (level < 0) {
-            return !clanOrNot;
+            return !boolValue;
         }
-        return clanOrNot;
+        return boolValue;
     }
 
-    // Very simple, for now: strip all extra data
+    protected static UnitRole hideRole(Entity entity, int level) {
+        if (level == HIGHEST_LEVEL) {
+            return entity.getRole();
+        } else if (level == 0) {
+            return UnitRole.UNDETERMINED;
+        } else if (level == LOWEST_LEVEL) {
+            return UnitRole.NONE;
+        }
+
+        // Ground roles are indices 2 - 9; Aero roles are indices 10 - 15
+        boolean isAero = entity.isAero();
+        UnitRole[] roles = UnitRole.values();
+        UnitRole currentRole = entity.getRole();
+        int index = currentRole.ordinal();
+        int newIndex = index;
+
+        if (!isAero) {
+            // For ground units
+            if (level >= 0) {
+                // Positive level means you get _near_ info
+                newIndex = hideNumericValue(index, level, 2, 9);
+            } else {
+                // Negative level means you get _wrong_ info!
+                newIndex = hideNumericValue(index, level, 10, 15);
+            }
+        } else {
+            // For Aero units
+            if (level >= 0) {
+                newIndex = hideNumericValue(index, level, 10, 15);
+            } else {
+                newIndex = hideNumericValue(index, level, 2, 9);
+            }
+        }
+
+        try {
+            return roles[newIndex];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return UnitRole.UNDETERMINED;
+        }
+    }
+
+    protected static List<WeaponMounted> hideWeapons(Entity entity, int level) {
+        if (level == HIGHEST_LEVEL) {
+            return entity.getWeaponList();
+        } else if (level == 0) {
+            return new ArrayList<>();
+        }
+
+        // Remove actual weapons if level is not highest
+        List <WeaponMounted> fakeWeapons = new ArrayList<WeaponMounted>(entity.getWeaponList());
+        Random random = new Random();
+        for (int i = 0; i < HIGHEST_LEVEL - level; i++) {
+            if (!fakeWeapons.isEmpty()) {
+                fakeWeapons.remove(random.nextInt(fakeWeapons.size()));
+            } else {
+                break;
+            }
+        }
+
+        // Insert some fake items if level is negative!
+        List<EquipmentType> weaponTypes =
+              EquipmentType.allTypes().stream().filter(type -> type instanceof WeaponType).toList();
+        for (int i = 0; i < (-level); i++) {
+            WeaponMounted ammoMounted = new WeaponMounted(entity,
+                  (WeaponType) weaponTypes.get(random.nextInt(weaponTypes.size())));
+            fakeWeapons.add(ammoMounted);
+        }
+
+        return fakeWeapons;
+    }
+
+    /**
+     * Obfuscate the ammo carried by the obscured entity, if any.
+     * @param entity    Entity used as the source
+     * @param level     Level of intel used to determine how obscured the info is.
+     * @return  List of AmmoMounted, possibly with some or all entries replaced by bogus data
+     *                  (this does not harm the underlying unit!)
+     */
+    protected static List<AmmoMounted> hideAmmo(Entity entity, int level) {
+        if (level == HIGHEST_LEVEL) {
+            return entity.getAmmo();
+        } else if (level == 0) {
+            return new ArrayList<>();
+        }
+
+        // Remove actual bins if level is not highest
+        List <AmmoMounted> fakeAmmo = new ArrayList<AmmoMounted>(entity.getAmmo());
+        Random random = new Random();
+        for (int i = 0; i < HIGHEST_LEVEL - level; i++) {
+            if (!fakeAmmo.isEmpty()) {
+                fakeAmmo.remove(random.nextInt(fakeAmmo.size()));
+            } else {
+                break;
+            }
+        }
+
+        // Insert some fake items if level is negative!
+        List<EquipmentType> ammoTypes =
+              EquipmentType.allTypes().stream().filter(type -> type instanceof AmmoType).toList();
+        for (int i = 0; i < (-level); i++) {
+            AmmoMounted ammoMounted = new AmmoMounted(entity,
+                  (AmmoType) ammoTypes.get(random.nextInt(ammoTypes.size())));
+            fakeAmmo.add(ammoMounted);
+        }
+
+        return fakeAmmo;
+    }
+
+    /**
+     * Obfuscate extra data from the entity's crew instance.
+     * @param extraData     Map of positions and extra data pertaining to them.
+     * @param level         Level of intel used to determine how much extra data to divulge
+     * @return
+     */
     protected static Map<Integer, Map<String, String>> hideExtraData(Map<Integer, Map<String, String>> extraData,
           int level) {
         if (level == HIGHEST_LEVEL) {
@@ -330,16 +485,44 @@ public class ObscuredEntity implements IContact, Serializable {
         return fakeData;
     }
 
-    protected static String hideShortName(Entity entity, int level) {
+    /**
+     * Method for hiding a name string with "?" filling in from the end based on ratio of current level
+     * versus highest level achievable.
+     * E.g. level 12 gives: "Ryoken (Stormcrow) D" (the full name string)
+     * But level 11 gives:  "Ryoken (Stormcrow)??"
+     * Level 6 gives:       "Ryoken (St??????????"
+     * Level 0 gives:       "?????????????????????"
+     * Level -1 and lower slowly reveal units further and further from reality!
+     *
+     * @param string        String to be occluded.
+     * @param level         Level used to determine _how much_ to occlude.
+     * @param altFunction   Function that will be called to provide a replacement string at negative levels
+     * @return  String occluded version of string, with "?" replacing chars from the back forward.
+     */
+    protected static String hideEntityName(String string, int level, Function<Integer, String> altFunction) {
         if (level == HIGHEST_LEVEL) {
-            return entity.getShortName();
-        } if (level == 0) {
-            return "???";
+            return string;
+        } else if (level >= 0) {
+            return chars2questions(string, (int) (((1.0 * level)/HIGHEST_LEVEL) * string.length()));
+        } else {
+            // Get a "random" but determinant index within the cache
+            // Negate the stop index since level here is negative
+            String altString = altFunction.apply(level);
+            return chars2questions(altString, (int) ((-1.0 * level/HIGHEST_LEVEL) * altString.length()));
         }
+    }
 
-        // Use getShortNameRaw to produce mungible string to work with?
-        // Or getChassis, getClanChassis, getModel methods?
-        return "Bob";
-
+    /**
+     * Replace from the end of the string, to the "count"th character, with "?"
+     * @param input String to convert
+     * @param count index at which to stop converting
+     * @return
+     */
+    protected static String chars2questions(String input, int stop) {
+        StringBuilder builder = new StringBuilder(input);
+        for (int i = input.length() - 1; i >= stop; i--) {
+            builder.setCharAt(i, '?');
+        }
+        return builder.toString();
     }
 }
