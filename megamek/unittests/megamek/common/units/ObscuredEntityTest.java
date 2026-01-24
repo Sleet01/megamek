@@ -33,6 +33,7 @@
 
 package megamek.common.units;
 
+import megamek.common.enums.Gender;
 import megamek.common.equipment.AmmoMounted;
 import megamek.common.equipment.EquipmentType;
 import megamek.common.equipment.WeaponMounted;
@@ -43,6 +44,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
 
@@ -63,115 +65,70 @@ class ObscuredEntityTest {
     }
 
     @Test
-    void getCrew() {
-    }
-
-    @Test
-    void getShortName() {
-    }
-
-    @Test
-    void generalName() {
-    }
-
-    @Test
-    void specificName() {
-    }
-
-    @Test
-    void tracksHeat() {
-    }
-
-    @Test
-    void getAmmo() {
-    }
-
-    @Test
-    void getWeaponList() {
-    }
-
-    @Test
-    void hasTAG() {
-    }
-
-    @Test
-    void hasETypeFlag() {
-    }
-
-    @Test
-    void getRole() {
-    }
-
-    @Test
-    void getArmor() {
-    }
-
-    @Test
-    void getArmorType() {
-    }
-
-    @Test
-    void getOriginalWalkMP() {
-    }
-
-    @Test
-    void hasECM() {
-    }
-
-    @Test
-    void shouldOffBoardDeploy() {
-    }
-
-    @Test
-    void isOffBoard() {
-    }
-
-    @Test
-    void getDeployRound() {
-    }
-
-    @Test
-    void getOwner() {
-    }
-
-    @Test
-    void getOwnerId() {
-    }
-
-    @Test
-    void hideCrew() {
-    }
-
-    @Test
     void hideCrewType() {
-    }
+        Crew original = new Crew(CrewType.DUAL, "Baka and Test", 2, 4, 5, Gender.FEMALE, false, new HashMap<>());
+        CrewType type = original.getCrewType();
 
-    @Test
-    void hideName() {
-    }
+        CrewType hidden = ObscuredEntity.hideCrewType(type, 12);
+        assertEquals(type, hidden);
 
-    @Test
-    void hideSize() {
-    }
+        hidden = ObscuredEntity.hideCrewType(type, 6);
+        assertNotEquals(type, hidden);
+        assertEquals(CrewType.TRIPOD, hidden);
 
-    @Test
-    void hideNumericValue() {
-    }
+        hidden = ObscuredEntity.hideCrewType(type, 0);
+        assertNotEquals(type, hidden);
+        assertEquals(CrewType.CREW, hidden);
 
-    @Test
-    void hideSkill() {
-    }
+        hidden = ObscuredEntity.hideCrewType(type, -6);
+        assertNotEquals(type, hidden);
+        assertEquals(CrewType.SINGLE, hidden);
 
-    @Test
-    void hideGender() {
+        hidden = ObscuredEntity.hideCrewType(type, -12);
+        assertNotEquals(type, hidden);
+        assertEquals(CrewType.NONE, hidden);
     }
 
     @Test
     void hideBoolean() {
+        // Switches value if level is < 0
+        boolean original = false;
+        boolean modified = ObscuredEntity.hideBoolean(original, 6);
+        assertEquals(original, modified);
+
+        modified = ObscuredEntity.hideBoolean(original, -6);
+        assertNotEquals(original, modified);
     }
 
     @Test
-    void hideRole() {
+    void hideMekRoleVariousLevels() {
+        Mek archer = (Mek) MMTestUtilities.getEntityForUnitTesting("Archer ARC-2R", false);
+        assertNotNull(archer);
+
+        // With 0 intel, we don't know its role
+        UnitRole original = UnitRole.MISSILE_BOAT;
+        archer.setUnitRole(original);
+        UnitRole low = ObscuredEntity.hideRole(archer, 0);
+        assertEquals(UnitRole.UNDETERMINED, low);
+
+        // With 6 intel, we can guess its role, but will likely guess wrong
+        UnitRole medium = ObscuredEntity.hideRole(archer, 6);
+        assertNotEquals(UnitRole.MISSILE_BOAT, medium);
+        assertEquals(UnitRole.SNIPER, medium);
+
+        // With high intel scores, we are much more likely to get it right
+        UnitRole high = ObscuredEntity.hideRole(archer, 11);
+        assertEquals(UnitRole.MISSILE_BOAT, high);
+
+        // With negative scores, we're being fed misinformation
+        UnitRole lowNegative = ObscuredEntity.hideRole(archer, -6);
+        assertNotEquals(UnitRole.MISSILE_BOAT, lowNegative);
+        assertEquals(UnitRole.INTERCEPTOR, lowNegative);
+
+        // With larger negative scores, we are completely wrong
+        UnitRole largeNegative = ObscuredEntity.hideRole(archer, -12);
+        assertNotEquals(UnitRole.MISSILE_BOAT, largeNegative);
+        assertEquals(UnitRole.NONE, largeNegative);
     }
 
     @Test
