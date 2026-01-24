@@ -38,14 +38,11 @@ import megamek.common.enums.Gender;
 import megamek.common.equipment.AmmoMounted;
 import megamek.common.equipment.AmmoType;
 import megamek.common.equipment.EquipmentType;
-import megamek.common.equipment.Mounted;
 import megamek.common.equipment.WeaponMounted;
 import megamek.common.equipment.WeaponType;
 import megamek.common.game.Game;
 import megamek.common.loaders.MekSummary;
 import megamek.common.loaders.MekSummaryCache;
-import megamek.common.weapons.Weapon;
-import org.apache.commons.collections4.functors.EqualPredicate;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -54,9 +51,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.function.Supplier;
-
-import static megamek.common.equipment.Mounted.createMounted;
 
 /**
  * Class for implementing concealed information (TO:AR pp. 187-188) and espionage,
@@ -177,7 +171,7 @@ public class ObscuredEntity implements IContact, Serializable {
 
     public String specificName() {
         Function<Integer, String> altSpecific = (level) -> {
-            int length = entity.generalName().length();
+            int length = entity.specificName().length();
             MekSummary[] summaries = MekSummaryCache.getInstance(true).getAllMeks();
             return summaries[(length * level * level) % summaries.length].specificName();
         };
@@ -255,12 +249,12 @@ public class ObscuredEntity implements IContact, Serializable {
         }
         Crew oCrew = new Crew(
               hideCrewType(crew.getCrewType(), level),
-              hideName(crew.getName(), level),
-              hideSize(crew.getSize(), level),
-              hideSkill(crew.getGunneryL(), level),
-              hideSkill(crew.getGunneryM(), level),
-              hideSkill(crew.getGunneryB(), level),
-              hideSkill(crew.getPiloting(), level),
+              hideCrewName(crew.getName(), level),
+              hideCrewSize(crew.getSize(), level),
+              hideCrewSkill(crew.getGunneryL(), level),
+              hideCrewSkill(crew.getGunneryM(), level),
+              hideCrewSkill(crew.getGunneryB(), level),
+              hideCrewSkill(crew.getPiloting(), level),
               hideGender(crew.getGender(), level),
               hideBoolean(crew.isClanPilot(), level),
               hideExtraData(crew.getExtraData(), level)
@@ -272,11 +266,15 @@ public class ObscuredEntity implements IContact, Serializable {
     protected static CrewType hideCrewType(CrewType crewType, int level) {
         if (level == HIGHEST_LEVEL) {
             return crewType;
+        } else if (level == LOWEST_LEVEL) {
+            return CrewType.NONE;
+        } else if (level == 0) {
+            return CrewType.CREW;
         }
-        return CrewType.values()[Math.floorMod(crewType.getCrewSlots() + level, 10)];
+        return CrewType.values()[hideNumericValue(crewType.ordinal(), level, 0, 9)];
     }
 
-    protected static String hideName(String name, int level) {
+    protected static String hideCrewName(String name, int level) {
         if (level == HIGHEST_LEVEL) {
             return name;
         } else if (level == 0) {
@@ -306,30 +304,45 @@ public class ObscuredEntity implements IContact, Serializable {
         return builder.toString();
     }
 
-    protected static int hideSize(int size, int level) {
+    protected static int hideCrewSize(int size, int level) {
         if (level == HIGHEST_LEVEL) {
             return size;
         }
         return CrewType.values()[Math.floorMod(size + level, 10)].getCrewSlots();
     }
 
+    /**
+     * Turn a real value into a slightly different value, based on intel level, within a defined range,
+     * in a determinative manner.
+     * @Precondition: highThreshold must be greater than 0 and greater than numericValue!
+     * @param numericValue      The original value we want to hide.
+     * @param level             The intel value being used to "detect" the real value
+     * @param lowThreshold      Lowest number to return, inclusive.
+     * @param highThreshold     Highest number to return, inclusive.
+     * @return  int             obfuscated numerical value
+     */
     protected static int hideNumericValue(int numericValue, int level, int lowThreshold, int highThreshold) {
+        // Normalize numericValue within the provided range if it doesn't currently fall within it.
+        if (numericValue < lowThreshold) {
+            numericValue += lowThreshold;
+        } else if (numericValue > highThreshold) {
+            numericValue = lowThreshold + Math.floorMod(highThreshold - lowThreshold, numericValue);
+        }
         int fakeSkill = switch (level) {
             case HIGHEST_LEVEL -> numericValue;
-            case 11, 10 -> List.of(-1, 1).get(Math.floorMod(level + numericValue, 2)) + numericValue;
-            case 9, 8 -> List.of(-2, -1, 1, 2).get(Math.floorMod(level + numericValue, 4)) + numericValue;
-            case 7, 6 -> List.of(-3, -2, -1, 1, 2, 3).get(Math.floorMod(level + numericValue, 6)) + numericValue;
-            case 5, 4 -> List.of(-4, -3, -2, -1, 1, 2, 3, 4).get(Math.floorMod(level + numericValue, 8)) + numericValue;
-            case 3, 2 -> List.of(-5, -4, -3, -2, -1, 1, 2, 3, 4, 5).get(Math.floorMod(level + numericValue, 10)) + numericValue;
+            case 11, 10 -> List.of(-1, 0, 1).get(Math.floorMod(level + numericValue, 3)) + numericValue;
+            case 9, 8 -> List.of(-2, -1, 0, 1, 2).get(Math.floorMod(level + numericValue, 5)) + numericValue;
+            case 7, 6 -> List.of(-3, -2, -1, 0, 1, 2, 3).get(Math.floorMod(level * level + numericValue, 7)) + numericValue;
+            case 5, 4 -> List.of(-4, -3, -2, -1, 0, 1, 2, 3, 4).get(Math.floorMod(level * level + numericValue, 9)) + numericValue;
+            case 3, 2 -> List.of(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5).get(Math.floorMod(level * level * level * level + numericValue, 11)) + numericValue;
             case 1, 0, -1 -> (highThreshold - lowThreshold) / 2;
-            // -2 and lower
-            default -> highThreshold - numericValue;
+            // -2 and below
+            default -> Math.floorMod((highThreshold - numericValue) * level * level, -level);
         };
         return (Math.max(Math.min(highThreshold, fakeSkill), lowThreshold));
-
     }
 
-    protected static int hideSkill(int skill, int level) {
+    protected static int hideCrewSkill(int skill, int level) {
         return hideNumericValue(skill, level, 0, 8);
     }
 
@@ -371,15 +384,15 @@ public class ObscuredEntity implements IContact, Serializable {
                 // Positive level means you get _near_ info
                 newIndex = hideNumericValue(index, level, 2, 9);
             } else {
-                // Negative level means you get _wrong_ info!
-                newIndex = hideNumericValue(index, level, 10, 15);
+                // Negative level means you get _wrong_ info!  Negate level for more interesting wrongness.
+                newIndex = hideNumericValue(index, -level, 10, 15);
             }
         } else {
             // For Aero units
             if (level >= 0) {
                 newIndex = hideNumericValue(index, level, 10, 15);
             } else {
-                newIndex = hideNumericValue(index, level, 2, 9);
+                newIndex = hideNumericValue(index, -level, 2, 9);
             }
         }
 
