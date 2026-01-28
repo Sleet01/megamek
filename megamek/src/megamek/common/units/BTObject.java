@@ -411,6 +411,18 @@ public interface BTObject {
     default boolean tracksHeat() {
         return false;
     }
+
+    /**
+     * Used to identify a unit that has TSM installed.
+     * Only Mek and Mek derivatives will return anything besides false.
+     *
+     * @param includePrototype  boolean; whether to include Prototype TSM when checking.
+     * @return true if TSM equipment is installed
+     */
+    default boolean hasTSM(boolean includePrototype) {
+        return false;
+    }
+
     /**
      * Returns the general name or type name of this unit/object. For standard individual units, this is the chassis.
      * For other types of units or objects this can be the full designation or a general part of the designation. Much

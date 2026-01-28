@@ -209,24 +209,23 @@ class ObscuredEntityTest {
         // Drop to level 6
         forcesLevel = 6;
         hiddenShort = ObscuredEntity.hideEntityName(ryoken.getShortName(), forcesLevel, altShort);
-        assertEquals("Ryoken (St??????????", hiddenShort);
+        assertEquals("Ryoken (St██████████", hiddenShort);
 
         // Drop to level 0
         forcesLevel = 0;
         hiddenShort = ObscuredEntity.hideEntityName(ryoken.getShortName(), forcesLevel, altShort);
-        assertEquals("????????????????????", hiddenShort);
+        assertEquals("████████████████████", hiddenShort);
 
         // Drop to level -6 - result should be a partially-hidden _different_ unit name
         forcesLevel = -6;
         hiddenShort = ObscuredEntity.hideEntityName(ryoken.getShortName(), forcesLevel, altShort);
-        assertEquals("Buraq Fast Batt???????????????", hiddenShort);
+        assertEquals("Buraq Fast Batt███████████████", hiddenShort);
 
 
         // Drop to level -12 - result should be a completely different unit name again
         forcesLevel = -12;
         hiddenShort = ObscuredEntity.hideEntityName(ryoken.getShortName(), forcesLevel, altShort);
         assertEquals("MML/9 Turret (Triple)", hiddenShort);
-
     }
 
     @Test
@@ -251,17 +250,17 @@ class ObscuredEntityTest {
         // Drop to level 6
         forcesLevel = 6;
         hiddenShort = ObscuredEntity.hideEntityName(archer.getShortName(), forcesLevel, altShort);
-        assertEquals("Archer???????", hiddenShort);
+        assertEquals("Archer███████", hiddenShort);
 
         // Drop to level 0
         forcesLevel = 0;
         hiddenShort = ObscuredEntity.hideEntityName(archer.getShortName(), forcesLevel, altShort);
-        assertEquals("?????????????", hiddenShort);
+        assertEquals("█████████████", hiddenShort);
 
         // Drop to level -6 - result should be a partially-hidden _different_ unit name
         forcesLevel = -6;
         hiddenShort = ObscuredEntity.hideEntityName(archer.getShortName(), forcesLevel, altShort);
-        assertEquals("Nephilim Assault Batt?????????????????????", hiddenShort);
+        assertEquals("Nephilim Assault Batt█████████████████████", hiddenShort);
 
         // Drop to level -12 - result should be a completely different unit name again
         forcesLevel = -12;
@@ -272,7 +271,7 @@ class ObscuredEntityTest {
     @Test
     void chars2questionsShortString() {
         String name = "ShortName";
-        String expected = "Short????";
+        String expected = "Short████";
 
         String hiddenName = ObscuredEntity.chars2questions(name, 5);
         assertEquals(expected, hiddenName);
@@ -281,7 +280,7 @@ class ObscuredEntityTest {
     @Test
     void chars2questionsLongString() {
         String name = "Long Name With Many Parts";
-        String expected = "Long Name ???????????????";
+        String expected = "Long Name ███████████████";
 
         String hiddenName = ObscuredEntity.chars2questions(name, 10);
         assertEquals(expected, hiddenName);

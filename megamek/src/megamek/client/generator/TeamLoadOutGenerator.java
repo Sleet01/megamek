@@ -40,7 +40,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -720,7 +719,7 @@ public class TeamLoadOutGenerator {
     }
 
     private static long checkForTSM(ArrayList<? extends IContact> el) {
-        return el.stream().filter(e -> e.isMek() && ((Mek) e).hasTSM(false)).count();
+        return el.stream().filter(e -> e.isMek() &&  e.hasTSM(false)).count();
     }
     // endregion Check for various unit types, armor types, etc.
 
