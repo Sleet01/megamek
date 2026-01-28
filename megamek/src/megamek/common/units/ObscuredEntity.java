@@ -61,6 +61,7 @@ public class ObscuredEntity implements IContact, Serializable {
     public final static int HIGHEST_LEVEL = 12;
     public final static int LOWEST_LEVEL = -12;
     public final static int UNKNOWN_ENTITY_ID = -1;
+    public final static char REDACTED = '\u2588';
 
     private transient Entity entity;
     private int entityId;
@@ -70,7 +71,7 @@ public class ObscuredEntity implements IContact, Serializable {
     private int personnelLevel;
 
     public ObscuredEntity(Game game, int entityId) {
-        this(game.getEntity(entityId), HIGHEST_LEVEL, HIGHEST_LEVEL, LOWEST_LEVEL, LOWEST_LEVEL);
+        this(game.getEntity(entityId), HIGHEST_LEVEL, HIGHEST_LEVEL, HIGHEST_LEVEL, HIGHEST_LEVEL);
     }
 
     public ObscuredEntity(Game game, int entityId, int forcesLevel, int positionLevel, int logisticsLevel, int personnelLevel) {
@@ -78,7 +79,7 @@ public class ObscuredEntity implements IContact, Serializable {
     }
 
     public ObscuredEntity(Entity entity) {
-        this(entity, HIGHEST_LEVEL, HIGHEST_LEVEL, LOWEST_LEVEL, LOWEST_LEVEL);
+        this(entity, HIGHEST_LEVEL, HIGHEST_LEVEL, HIGHEST_LEVEL, HIGHEST_LEVEL);
     }
 
     public ObscuredEntity(
@@ -146,10 +147,12 @@ public class ObscuredEntity implements IContact, Serializable {
         this.entityId = entityId;
     }
 
+    @Override
     public Crew getCrew() {
         return hideCrew(entity.getCrew(), personnelLevel);
     }
 
+    @Override
     public String getShortName() {
         Function<Integer, String> altShort = (level) -> {
             int length = entity.getShortName().length();
@@ -160,6 +163,7 @@ public class ObscuredEntity implements IContact, Serializable {
         return hideEntityName(entity.getShortName(), forcesLevel, altShort);
     }
 
+    @Override
     public String generalName() {
         Function<Integer, String> altGeneral = (level) -> {
             int length = entity.generalName().length();
@@ -169,6 +173,7 @@ public class ObscuredEntity implements IContact, Serializable {
         return hideEntityName(entity.generalName(), forcesLevel, altGeneral );
     }
 
+    @Override
     public String specificName() {
         Function<Integer, String> altSpecific = (level) -> {
             int length = entity.specificName().length();
@@ -178,69 +183,216 @@ public class ObscuredEntity implements IContact, Serializable {
         return hideEntityName(entity.specificName(), forcesLevel, altSpecific);
     }
 
+    @Override
     public boolean tracksHeat() {
         return hideBoolean(entity.tracksHeat(), forcesLevel);
     }
 
+    @Override
     public List<AmmoMounted> getAmmo() {
         return hideAmmo(entity, logisticsLevel);
     }
 
+    @Override
     public List<WeaponMounted> getWeaponList() {
         return hideWeapons(entity, logisticsLevel);
     }
 
+    @Override
     public boolean hasTAG() {
         return hideBoolean(entity.hasTAG(), logisticsLevel);
     }
 
+    @Override
     public boolean hasETypeFlag(long flag) {
         return hideBoolean(entity.hasETypeFlag(flag), forcesLevel);
     }
 
+    @Override
     public UnitRole getRole() {
         return hideRole(entity, forcesLevel);
     }
 
+    @Override
     public int getArmor(int loc) {
         int original = entity.getArmor(loc);
         return hideNumericValue(original, logisticsLevel, 0, original * 2);
     }
 
+    @Override
     public int getArmorType(int loc) {
         int original = entity.getArmorType(loc);
         // Armor types should probably be an enum.
         return hideNumericValue(original, logisticsLevel, -1, 51);
     }
 
+    @Override
     public int getOriginalWalkMP() {
         int original = entity.getOriginalWalkMP();
         return hideNumericValue(original, forcesLevel, 1, original * 3);
     }
 
+    @Override
     public boolean hasECM() {
         return hideBoolean(entity.hasECM(), logisticsLevel);
     }
 
+    @Override
     public boolean shouldOffBoardDeploy(int round) {
         return hideBoolean(entity.shouldOffBoardDeploy(round), positionLevel);
     }
 
+    @Override
     public boolean isOffBoard() {
         return hideBoolean(entity.isOffBoard(), positionLevel);
     }
 
+    @Override
+    public boolean isMek() {
+        return hideBoolean(entity.isMek(), forcesLevel);
+    }
+
+    @Override
+    public boolean isProtoMek() {
+        return hideBoolean(entity.isProtoMek(), forcesLevel);
+    }
+
+    @Override
+    public boolean isTripodMek() {
+        return hideBoolean(entity.isTripodMek(), forcesLevel);
+    }
+
+    @Override
+    public boolean isQuadMek() {
+        return hideBoolean(entity.isQuadMek(), forcesLevel);
+    }
+
+    @Override
+    public boolean isIndustrialMek() {
+        return hideBoolean(entity.isIndustrialMek(), forcesLevel);
+    }
+
+    @Override
+    public boolean isFighter() {
+        return hideBoolean(entity.isFighter(), forcesLevel);
+    }
+
+    @Override
+    public boolean isAerospaceFighter() {
+        return hideBoolean(entity.isAerospaceFighter(), forcesLevel);
+    }
+
+    @Override
+    public boolean isConventionalFighter() {
+        return hideBoolean(entity.isConventionalFighter(), forcesLevel);
+    }
+
+    @Override
+    public boolean isFixedWingSupport() {
+        return hideBoolean(entity.isFixedWingSupport(), forcesLevel);
+    }
+
+    @Override
+    public boolean isLargeAerospace() {
+        return hideBoolean(entity.isLargeAerospace(), forcesLevel);
+    }
+
+    @Override
+    public boolean isBattleArmor() {
+        return hideBoolean(entity.isBattleArmor(), forcesLevel);
+    }
+
+    @Override
+    public boolean isConventionalInfantry() {
+        return hideBoolean(entity.isConventionalInfantry(), forcesLevel);
+    }
+
+    @Override
+    public boolean isHandheldWeapon() {
+        return hideBoolean(entity.isHandheldWeapon(), forcesLevel);
+    }
+
+    @Override
+    public boolean isAerospaceSV() {
+        return hideBoolean(entity.isAerospaceSV(), forcesLevel);
+    }
+
+    @Override
+    public boolean isSmallCraft() {
+        return hideBoolean(entity.isSmallCraft(), forcesLevel);
+    }
+
+    @Override
+    public boolean isDropShip() {
+        return hideBoolean(entity.isDropShip(), forcesLevel);
+    }
+
+    @Override
+    public boolean isJumpShip() {
+        return hideBoolean(entity.isJumpShip(), forcesLevel);
+    }
+
+    @Override
+    public boolean isWarShip() {
+        return hideBoolean(entity.isWarShip(), forcesLevel);
+    }
+
+    @Override
+    public boolean isSpaceStation() {
+        return hideBoolean(entity.isSpaceStation(), forcesLevel);
+    }
+
+    @Override
+    public boolean isSpheroid() {
+        return hideBoolean(entity.isSpheroid(), forcesLevel);
+    }
+
+    @Override
+    public boolean isSupportVehicle() {
+        return hideBoolean(entity.isSupportVehicle(), forcesLevel);
+    }
+
+    @Override
+    public boolean isInfantry() {
+        return hideBoolean(entity.isInfantry(), forcesLevel);
+    }
+
+    @Override
+    public boolean isCombatVehicle() {
+        return hideBoolean(entity.isCombatVehicle(), forcesLevel);
+    }
+
+    @Override
+    public boolean isAero() {
+        return hideBoolean(entity.isAero(), forcesLevel);
+    }
+
+    @Override
+    public boolean isBomber() {
+        return hideBoolean(entity.isBomber(), forcesLevel);
+    }
+
+    @Override
     public int getDeployRound() {
         return hideNumericValue(entity.getDeployRound(), positionLevel, 1, 12);
     }
 
     // These next two should probably not be messed with initially.
+    @Override
     public Player getOwner() {
         return entity.getOwner();
     }
 
+    @Override
     public int getOwnerId() {
         return entity.getOwnerId();
+    }
+
+    public boolean hasTSM(boolean includePrototype) {
+        if (entity.isMek()) {
+            return hideBoolean(((Mek) entity).hasTSM(includePrototype), forcesLevel);
+        }
+        return false;
     }
 
     protected static Crew hideCrew(Crew crew, int level) {
@@ -286,7 +438,7 @@ public class ObscuredEntity implements IContact, Serializable {
         if (level > 0) {
             int stride = Math.max(1, (name.length()/(1 + (HIGHEST_LEVEL-level))));
             for (int i = stride - 1; i < name.length(); i+=stride) {
-                builder.setCharAt(i, '?');
+                builder.setCharAt(i, REDACTED);
             }
         } else if (level < 0) {
             String abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'-. ";
@@ -499,18 +651,18 @@ public class ObscuredEntity implements IContact, Serializable {
     }
 
     /**
-     * Method for hiding a name string with "?" filling in from the end based on ratio of current level
+     * Method for hiding a name string with "█" filling in from the end based on ratio of current level
      * versus highest level achievable.
      * E.g. level 12 gives: "Ryoken (Stormcrow) D" (the full name string)
-     * But level 11 gives:  "Ryoken (Stormcrow)??"
-     * Level 6 gives:       "Ryoken (St??????????"
-     * Level 0 gives:       "?????????????????????"
+     * But level 11 gives:  "Ryoken (Stormcrow)██"
+     * Level 6 gives:       "Ryoken (St██████████"
+     * Level 0 gives:       "████████████████████"
      * Level -1 and lower slowly reveal units further and further from reality!
      *
      * @param string        String to be occluded.
      * @param level         Level used to determine _how much_ to occlude.
      * @param altFunction   Function that will be called to provide a replacement string at negative levels
-     * @return  String occluded version of string, with "?" replacing chars from the back forward.
+     * @return  String occluded version of string, with "█" replacing chars from the back forward.
      */
     protected static String hideEntityName(String string, int level, Function<Integer, String> altFunction) {
         if (level == HIGHEST_LEVEL) {
@@ -534,7 +686,7 @@ public class ObscuredEntity implements IContact, Serializable {
     protected static String chars2questions(String input, int stop) {
         StringBuilder builder = new StringBuilder(input);
         for (int i = input.length() - 1; i >= stop; i--) {
-            builder.setCharAt(i, '?');
+            builder.setCharAt(i, REDACTED);
         }
         return builder.toString();
     }
