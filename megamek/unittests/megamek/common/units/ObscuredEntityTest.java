@@ -269,20 +269,20 @@ class ObscuredEntityTest {
     }
 
     @Test
-    void chars2questionsShortString() {
+    void chars2RedactedShortString() {
         String name = "ShortName";
         String expected = "Short████";
 
-        String hiddenName = ObscuredEntity.chars2questions(name, 5);
+        String hiddenName = ObscuredEntity.chars2redacted(name, 5);
         assertEquals(expected, hiddenName);
     }
 
     @Test
-    void chars2questionsLongString() {
+    void chars2RedactedLongString() {
         String name = "Long Name With Many Parts";
         String expected = "Long Name ███████████████";
 
-        String hiddenName = ObscuredEntity.chars2questions(name, 10);
+        String hiddenName = ObscuredEntity.chars2redacted(name, 10);
         assertEquals(expected, hiddenName);
     }
 }

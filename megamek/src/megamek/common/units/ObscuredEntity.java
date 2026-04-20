@@ -668,12 +668,12 @@ public class ObscuredEntity implements IContact, Serializable {
         if (level == HIGHEST_LEVEL) {
             return string;
         } else if (level >= 0) {
-            return chars2questions(string, (int) (((1.0 * level)/HIGHEST_LEVEL) * string.length()));
+            return chars2redacted(string, (int) (((1.0 * level)/HIGHEST_LEVEL) * string.length()));
         } else {
             // Get a "random" but determinant index within the cache
             // Negate the stop index since level here is negative
             String altString = altFunction.apply(level);
-            return chars2questions(altString, (int) ((-1.0 * level/HIGHEST_LEVEL) * altString.length()));
+            return chars2redacted(altString, (int) ((-1.0 * level/HIGHEST_LEVEL) * altString.length()));
         }
     }
 
@@ -683,7 +683,7 @@ public class ObscuredEntity implements IContact, Serializable {
      * @param count index at which to stop converting
      * @return
      */
-    protected static String chars2questions(String input, int stop) {
+    protected static String chars2redacted(String input, int stop) {
         StringBuilder builder = new StringBuilder(input);
         for (int i = input.length() - 1; i >= stop; i--) {
             builder.setCharAt(i, REDACTED);
