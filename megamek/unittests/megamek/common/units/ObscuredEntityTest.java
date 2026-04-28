@@ -225,7 +225,7 @@ class ObscuredEntityTest {
         // Drop to level -12 - result should be a completely different unit name again
         forcesLevel = -12;
         hiddenShort = ObscuredEntity.hideEntityName(ryoken.getShortName(), forcesLevel, altShort);
-        assertEquals("MML/9 Turret (Triple)", hiddenShort);
+        assertEquals("MML/9 Turret (w/ Artemis IV) (Single)", hiddenShort);
     }
 
     @Test
