@@ -132,7 +132,7 @@ public class ObscuredEntity implements IContact, Serializable {
     /**
      * Set the entity.
      * Side effect: sets the entityId field to the entity's ID value.
-     * @param entity
+     * @param entity    Entity that this ObscuredEntity will be obscuring
      */
     public void setEntity(Entity entity) {
         this.entity = entity;
@@ -680,7 +680,7 @@ public class ObscuredEntity implements IContact, Serializable {
     /**
      * Replace from the end of the string, to the "count"th character, with "?"
      * @param input String to convert
-     * @param count index at which to stop converting
+     * @param stop index at which to stop converting
      * @return
      */
     protected static String chars2redacted(String input, int stop) {
