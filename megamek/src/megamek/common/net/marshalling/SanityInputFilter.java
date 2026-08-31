@@ -64,6 +64,7 @@ public class SanityInputFilter implements ObjectInputFilter {
           Pattern.compile("java\\.lang\\.\\[I"),
           Pattern.compile("java\\.lang\\.Object"),
           Pattern.compile("java\\.lang\\.String"),
+          Pattern.compile("java\\.lang\\.invoke\\.SerializedLambda"),
 
           // Java Net
           Pattern.compile("java\\.net\\.URI"),
