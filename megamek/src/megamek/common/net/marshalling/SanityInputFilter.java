@@ -72,6 +72,10 @@ public class SanityInputFilter implements ObjectInputFilter {
           // Java AWT
           Pattern.compile("java\\.awt\\.Color"),
 
+          // Java Time
+          Pattern.compile("java\\.time\\.Ser"),
+          Pattern.compile("java\\.time\\.LocalDate"),
+
           // Java Util
           Pattern.compile("java\\.util\\.AbstractMap"),
           Pattern.compile("java\\.util\\.ArrayList"),
