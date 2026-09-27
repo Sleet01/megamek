@@ -225,7 +225,7 @@ class ObscuredEntityTest {
         // Drop to level -12 - result should be a completely different unit name again
         forcesLevel = -12;
         hiddenShort = ObscuredEntity.hideEntityName(ryoken.getShortName(), forcesLevel, altShort);
-        assertEquals("MML/9 Turret (w/ Artemis IV) (Single)", hiddenShort);
+        assertEquals("MML/9 Turret (w/ Artemis IV) (Triple)", hiddenShort);
     }
 
     @Test
@@ -265,7 +265,7 @@ class ObscuredEntityTest {
         // Drop to level -12 - result should be a completely different unit name again
         forcesLevel = -12;
         hiddenShort = ObscuredEntity.hideEntityName(archer.getShortName(), forcesLevel, altShort);
-        assertEquals("Eisensturm EST-O", hiddenShort);
+        assertEquals("Defiance DFC-OB", hiddenShort);
     }
 
     @Test

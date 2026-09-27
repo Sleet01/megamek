@@ -406,7 +406,10 @@ public class ObscuredEntity implements IContact, Serializable {
               hideCrewSkill(crew.getGunneryL(), level),
               hideCrewSkill(crew.getGunneryM(), level),
               hideCrewSkill(crew.getGunneryB(), level),
+              hideBoolean(crew.isHasNaturalAptitudeGunnery(), level),
+              hideBoolean(crew.isHasNaturalAptitudeArtillery(), level),
               hideCrewSkill(crew.getPiloting(), level),
+              hideBoolean(crew.isHasNaturalAptitudePiloting(), level),
               hideGender(crew.getGender(), level),
               hideBoolean(crew.isClanPilot(), level),
               hideExtraData(crew.getExtraData(), level)
