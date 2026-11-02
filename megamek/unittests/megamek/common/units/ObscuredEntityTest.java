@@ -58,7 +58,7 @@ class ObscuredEntityTest {
     static void beforeAll() throws InterruptedException {
         EquipmentType.initializeTypes();
         cache = MekSummaryCache.getInstance(true);
-        MekSummaryCache.refreshUnitData(true);
+        MekSummaryCache.rebuildUnitData(true);
         while (!cache.isInitialized()) {
             sleep(100);
         }
@@ -219,13 +219,13 @@ class ObscuredEntityTest {
         // Drop to level -6 - result should be a partially-hidden _different_ unit name
         forcesLevel = -6;
         hiddenShort = ObscuredEntity.hideEntityName(ryoken.getShortName(), forcesLevel, altShort);
-        assertEquals("Buraq Fast Batt███████████████", hiddenShort);
+        assertEquals("Wraith Battle█████████████", hiddenShort);
 
 
         // Drop to level -12 - result should be a completely different unit name again
         forcesLevel = -12;
         hiddenShort = ObscuredEntity.hideEntityName(ryoken.getShortName(), forcesLevel, altShort);
-        assertEquals("MML/9 Turret (w/ Artemis IV) (Triple)", hiddenShort);
+        assertEquals("Plasma Rifle Turret (Quad)", hiddenShort);
     }
 
     @Test
@@ -260,12 +260,12 @@ class ObscuredEntityTest {
         // Drop to level -6 - result should be a partially-hidden _different_ unit name
         forcesLevel = -6;
         hiddenShort = ObscuredEntity.hideEntityName(archer.getShortName(), forcesLevel, altShort);
-        assertEquals("Nephilim Assault Batt█████████████████████", hiddenShort);
+        assertEquals("Phalanx Battle ███████████████", hiddenShort);
 
         // Drop to level -12 - result should be a completely different unit name again
         forcesLevel = -12;
         hiddenShort = ObscuredEntity.hideEntityName(archer.getShortName(), forcesLevel, altShort);
-        assertEquals("Defiance DFC-OB", hiddenShort);
+        assertEquals("Lightning LTN-G16O", hiddenShort);
     }
 
     @Test
