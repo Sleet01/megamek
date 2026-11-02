@@ -40,7 +40,7 @@ import megamek.common.equipment.WeaponMounted;
 import megamek.common.loaders.MekSummary;
 import megamek.common.loaders.MekSummaryCache;
 import megamek.testUtilities.MMTestUtilities;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -54,8 +54,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class ObscuredEntityTest {
     private static MekSummaryCache cache;
 
-    @BeforeAll
-    static void beforeAll() throws InterruptedException {
+    // Unfortunately we have to rebuild before _each test_ or we can encounter issues caused by concurrent
+    // execution with caches in different states.  This only occurs when running multiple tests packages,
+    // so is difficult to pin down.
+    @BeforeEach
+    void beforeEach() throws InterruptedException {
         EquipmentType.initializeTypes();
         cache = MekSummaryCache.getInstance(true);
         MekSummaryCache.rebuildUnitData(true);
