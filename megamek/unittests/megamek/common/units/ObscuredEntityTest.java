@@ -61,7 +61,7 @@ class ObscuredEntityTest {
     void beforeEach() throws InterruptedException {
         EquipmentType.initializeTypes();
         cache = MekSummaryCache.getInstance(true);
-        MekSummaryCache.rebuildUnitData(true);
+        MekSummaryCache.refreshUnitData(true);
         while (!cache.isInitialized()) {
             sleep(100);
         }
